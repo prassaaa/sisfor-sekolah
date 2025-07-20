@@ -2,11 +2,11 @@ import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { useState, useEffect } from 'react';
+import { useAppearance } from '@/hooks/use-appearance';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const { appearance, updateAppearance } = useAppearance();
 
     const [heroRef, heroInView] = useInView({
         triggerOnce: true,
@@ -18,40 +18,12 @@ export default function Welcome() {
         threshold: 0.1,
     });
 
-    // Dark mode logic
-    useEffect(() => {
-        // Add no-transition class to prevent flash on initial load
-        document.documentElement.classList.add('no-transition');
-
-        // Check if user has a preference stored
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            setIsDarkMode(true);
-            document.documentElement.classList.add('dark');
-        } else {
-            setIsDarkMode(false);
-            document.documentElement.classList.remove('dark');
-        }
-
-        // Enable transitions after initial setup
-        requestAnimationFrame(() => {
-            document.documentElement.classList.remove('no-transition');
-        });
-    }, []);
+    // Get current theme state
+    const isDarkMode = appearance === 'dark' || (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const toggleDarkMode = () => {
-        const newDarkMode = !isDarkMode;
-        setIsDarkMode(newDarkMode);
-
-        if (newDarkMode) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
+        const newMode = isDarkMode ? 'light' : 'dark';
+        updateAppearance(newMode);
     };
 
     // Animation variants
